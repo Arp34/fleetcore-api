@@ -86,7 +86,7 @@ Integration API Key: `demo-key-partner-1`
 - **Mechanics:** Carlos Pérez and Laura Gómez (active, linked to the technicians) and Pedro Ruiz (inactive).
 - **Workshops:** Taller Centro (active) and Taller Norte (inactive).
 - **Vehicles:** `ABC123` and `DEF456` (AVAILABLE), `GHI789` (IN_MAINTENANCE) and `JKL012` (INACTIVE).
-- **Maintenances:** 2 COMPLETED for `ABC123` (history), 1 IN_PROGRESS for `GHI789` and 1 SCHEDULED for `DEF456`.
+- **Maintenances:** 2 COMPLETED for `ABC123` (history), 1 IN_PROGRESS for `GHI789` and 1 SCHEDULED for `DEF456`, each with its audit trail.
 
 ## 🧭 Main endpoints
 
@@ -101,9 +101,10 @@ All routes use the `/api` prefix.
 | | `GET /vehicles` · `GET /vehicles/:id` · `GET /vehicles/plate/:plate` | Authenticated |
 | Mechanics | `POST /mechanics` · `PATCH /mechanics/:id` · `PATCH /mechanics/:id/activate` · `PATCH /mechanics/:id/deactivate` | ADMIN |
 | | `GET /mechanics?isActive=` · `GET /mechanics/:id` | Authenticated |
+| | `GET /mechanics/me` (own mechanic profile) | TECHNICIAN |
 | Workshops | `POST /workshops` · `PATCH /workshops/:id` · `GET /workshops/all` · `PATCH /workshops/:id/activate` · `PATCH /workshops/:id/deactivate` | ADMIN |
 | | `GET /workshops` (active only) · `GET /workshops/:id` | Authenticated |
-| Maintenances | `POST /maintenances` · `GET /maintenances` · `GET /maintenances/active` · `GET /maintenances/vehicle/:vehicleId` · `GET /maintenances/vehicle/:vehicleId/history` · `GET /maintenances/mechanic/:mechanicId` | ADMIN |
+| Maintenances | `POST /maintenances` · `GET /maintenances` · `GET /maintenances/active` · `GET /maintenances/vehicle/:vehicleId` · `GET /maintenances/vehicle/:vehicleId/history` · `GET /maintenances/mechanic/:mechanicId` · `GET /maintenances/audit` · `GET /maintenances/:id/audit` | ADMIN |
 | | `GET /maintenances/my` | TECHNICIAN |
 | | `GET /maintenances/:id` · `PATCH /maintenances/:id/status` | ADMIN or assigned technician |
 | Integrations | `GET /integrations/vehicles/:plate/history` | `x-api-key` header |
@@ -118,12 +119,14 @@ All routes use the `/api` prefix.
 - Allowed transitions: `SCHEDULED → IN_PROGRESS | CANCELLED` and `IN_PROGRESS → COMPLETED | CANCELLED`. `COMPLETED` and `CANCELLED` are final states (409).
 - `IN_PROGRESS` sets the vehicle to `IN_MAINTENANCE`. `COMPLETED` requires `workPerformed`, `finalCost`, `finishedAt` and `finalMileage`, sets the vehicle back to `AVAILABLE` and updates its mileage.
 - Creation and status changes run inside transactions with row locking (`SELECT ... FOR UPDATE`).
+- Every status change is audited (`maintenance_status_logs`): who changed it, from which status, to which status and when.
+- When a maintenance starts, the vehicle, mechanic and workshop are checked again (they may have been deactivated after scheduling).
 - Uniform success responses (`TransformInterceptor`) and uniform errors (`AllExceptionsFilter`), including database errors, with no 500 responses.
 
 ## 🧪 Tests and evidence
 
 ```bash
-npm run test          # unit tests (status rules and auth)
+npm run test          # unit tests with Vitest (Jest-compatible API): status rules and auth
 npm run test:cov      # coverage
 npm run test:e2e      # e2e (requires: docker compose up -d db_test)
 ```
