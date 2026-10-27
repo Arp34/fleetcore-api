@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict HXNrOluHtGbguj2OWvftpOzbb4uIiJvlPQ9TgTcbCedikB2KKiEvPuiut2fF8my
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.11
@@ -18,20 +17,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
---
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON SCHEMA public IS '';
-
 
 --
 -- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
@@ -231,73 +216,61 @@ CREATE TABLE public.workshops (
 -- Data for Name: maintenance_status_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.maintenance_status_logs (id, created_at, updated_at, deleted_at, maintenance_id, from_status, to_status, changed_by_id) FROM stdin;
-8971606f-d2e9-4b2f-ab4b-a34e9a5dafb0	2026-09-10 15:00:00+00	2026-10-27 20:52:33.158344+00	\N	19607452-fc48-464b-bd88-03c19858feed	\N	SCHEDULED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-18ce5be9-680a-4646-a734-4460ddc4724f	2026-09-15 13:05:00+00	2026-10-27 20:52:33.158344+00	\N	19607452-fc48-464b-bd88-03c19858feed	SCHEDULED	IN_PROGRESS	d304129d-99b4-4d9a-a6ce-182cf86b0977
-2a4454d0-276c-48aa-991f-bcfead7d58f9	2026-09-15 16:30:00+00	2026-10-27 20:52:33.158344+00	\N	19607452-fc48-464b-bd88-03c19858feed	IN_PROGRESS	COMPLETED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-aae6395f-7e5c-4837-8782-e2d45aa8abfb	2026-10-05 14:00:00+00	2026-10-27 20:52:33.158344+00	\N	3a6b6f06-b574-4d72-bdbf-be25f3b84caf	\N	SCHEDULED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-573677fe-a2d4-485a-8a66-59b587c2c2a1	2026-10-10 12:10:00+00	2026-10-27 20:52:33.158344+00	\N	3a6b6f06-b574-4d72-bdbf-be25f3b84caf	SCHEDULED	IN_PROGRESS	d304129d-99b4-4d9a-a6ce-182cf86b0977
-cd18e236-c10d-433e-82ce-c302480ab74d	2026-10-10 14:00:00+00	2026-10-27 20:52:33.158344+00	\N	3a6b6f06-b574-4d72-bdbf-be25f3b84caf	IN_PROGRESS	COMPLETED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-6555d676-b290-4904-ac62-85be5c4777cc	2026-10-26 20:00:00+00	2026-10-27 20:52:33.158344+00	\N	06be9d3b-188c-4a26-816f-5f09d6ef2e39	\N	SCHEDULED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-62c023a8-c4c2-4f2d-9bd2-106083620c24	2026-10-27 12:40:00+00	2026-10-27 20:52:33.158344+00	\N	06be9d3b-188c-4a26-816f-5f09d6ef2e39	SCHEDULED	IN_PROGRESS	d304129d-99b4-4d9a-a6ce-182cf86b0977
-10006e00-a22c-490c-8982-858d98c48f84	2026-10-27 15:00:00+00	2026-10-27 20:52:33.158344+00	\N	2937a71a-5714-4d55-9713-8a474527ebf3	\N	SCHEDULED	d304129d-99b4-4d9a-a6ce-182cf86b0977
-\.
+INSERT INTO public.maintenance_status_logs VALUES ('e1073416-72b0-46a4-a1e0-89a0b463d5d8', '2026-09-10 15:00:00+00', '2026-10-27 23:48:35.432652+00', NULL, '8b4ee8f1-7153-410e-8d9d-3735e44941ff', NULL, 'SCHEDULED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('3caa479c-483f-46e4-a6a3-d01ecf4c9a75', '2026-09-15 13:05:00+00', '2026-10-27 23:48:35.432652+00', NULL, '8b4ee8f1-7153-410e-8d9d-3735e44941ff', 'SCHEDULED', 'IN_PROGRESS', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('a52bd103-3f42-400a-8949-9bfb4d602eb0', '2026-09-15 16:30:00+00', '2026-10-27 23:48:35.432652+00', NULL, '8b4ee8f1-7153-410e-8d9d-3735e44941ff', 'IN_PROGRESS', 'COMPLETED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('79338ae7-8bca-49da-a364-bd10d0603f29', '2026-10-05 14:00:00+00', '2026-10-27 23:48:35.432652+00', NULL, '48431ac8-dded-4b1a-9d07-85cbf89737bb', NULL, 'SCHEDULED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('191afb38-4b48-48ce-8258-82bcb42dade8', '2026-10-10 12:10:00+00', '2026-10-27 23:48:35.432652+00', NULL, '48431ac8-dded-4b1a-9d07-85cbf89737bb', 'SCHEDULED', 'IN_PROGRESS', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('abcd8c39-dba7-4413-9ce0-59bf26248e13', '2026-10-10 14:00:00+00', '2026-10-27 23:48:35.432652+00', NULL, '48431ac8-dded-4b1a-9d07-85cbf89737bb', 'IN_PROGRESS', 'COMPLETED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('0d189a76-0e1f-49f5-ab9f-9f2c97771efb', '2026-10-26 20:00:00+00', '2026-10-27 23:48:35.432652+00', NULL, 'bf70d2de-d8f1-43ce-8f9c-e0b2e5f2b707', NULL, 'SCHEDULED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('0b9dd8e7-01c1-49af-a4b4-9b04f108827d', '2026-10-27 12:40:00+00', '2026-10-27 23:48:35.432652+00', NULL, 'bf70d2de-d8f1-43ce-8f9c-e0b2e5f2b707', 'SCHEDULED', 'IN_PROGRESS', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
+INSERT INTO public.maintenance_status_logs VALUES ('666ad02d-1710-4fef-95e2-6b8a4586e28f', '2026-10-27 15:00:00+00', '2026-10-27 23:48:35.432652+00', NULL, '6fb23576-1fca-4de1-9592-f46106aeb5c3', NULL, 'SCHEDULED', 'b824078f-a403-4bd6-90cc-931a1c0a427e');
 
 
 --
 -- Data for Name: maintenances; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.maintenances (id, created_at, updated_at, deleted_at, type, description, mileage, scheduled_at, duration_minutes, estimated_end_at, status, started_at, work_performed, final_cost, finished_at, final_mileage, vehicle_id, mechanic_id, workshop_id) FROM stdin;
-19607452-fc48-464b-bd88-03c19858feed	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	PREVENTIVE	Cambio de aceite y filtros	45000	2026-09-15 13:00:00+00	180	2026-09-15 16:00:00+00	COMPLETED	2026-09-15 13:05:00+00	Cambio de aceite 15W40, filtro de aceite y filtro de aire	350000.00	2026-09-15 16:30:00+00	45000	35e7db17-6841-4672-b39d-3770af3f8054	211ab1ad-fc35-4e04-9721-ce814766be58	3a701419-4860-4973-8f55-fb7d347c65bd
-3a6b6f06-b574-4d72-bdbf-be25f3b84caf	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	CORRECTIVE	Reemplazo de pastillas de freno	52300	2026-10-10 12:00:00+00	120	2026-10-10 14:00:00+00	COMPLETED	2026-10-10 12:10:00+00	Reemplazo de pastillas delanteras y rectificación de discos	480000.00	2026-10-10 14:00:00+00	52300	35e7db17-6841-4672-b39d-3770af3f8054	e06f63de-4884-4879-b6c8-deebd04295f6	18fe98af-df31-4657-9979-d0d5e551f2b7
-06be9d3b-188c-4a26-816f-5f09d6ef2e39	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	CORRECTIVE	Falla en el sistema de embrague	80000	2026-10-27 12:30:00+00	240	2026-10-27 16:30:00+00	IN_PROGRESS	2026-10-27 12:40:00+00	\N	\N	\N	\N	232ba6c0-8384-4128-856b-45a9c69ffc48	e06f63de-4884-4879-b6c8-deebd04295f6	18fe98af-df31-4657-9979-d0d5e551f2b7
-2937a71a-5714-4d55-9713-8a474527ebf3	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	PREVENTIVE	Revisión de los 30.000 km	30500	2026-12-01 12:30:00+00	90	2026-12-01 14:00:00+00	SCHEDULED	\N	\N	\N	\N	\N	bd799718-063a-4b81-9bf2-806b8ee9fb46	211ab1ad-fc35-4e04-9721-ce814766be58	18fe98af-df31-4657-9979-d0d5e551f2b7
-\.
+INSERT INTO public.maintenances VALUES ('8b4ee8f1-7153-410e-8d9d-3735e44941ff', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'PREVENTIVE', 'Cambio de aceite y filtros', 45000, '2026-09-15 13:00:00+00', 180, '2026-09-15 16:00:00+00', 'COMPLETED', '2026-09-15 13:05:00+00', 'Cambio de aceite 15W40, filtro de aceite y filtro de aire', 350000.00, '2026-09-15 16:30:00+00', 45000, 'f99776de-f521-4a4b-9404-223c5143585d', 'f2835ef0-12e9-4a37-ba9f-67f626b60860', '7b102fea-43be-4329-a419-c75d45b83a63');
+INSERT INTO public.maintenances VALUES ('48431ac8-dded-4b1a-9d07-85cbf89737bb', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'CORRECTIVE', 'Reemplazo de pastillas de freno', 52300, '2026-10-10 12:00:00+00', 120, '2026-10-10 14:00:00+00', 'COMPLETED', '2026-10-10 12:10:00+00', 'Reemplazo de pastillas delanteras y rectificación de discos', 480000.00, '2026-10-10 14:00:00+00', 52300, 'f99776de-f521-4a4b-9404-223c5143585d', '56236fec-c43f-4c4a-8fac-21e9c41e6dcb', '8fd01e52-a296-4c2c-a0d1-651bb22ec8ea');
+INSERT INTO public.maintenances VALUES ('bf70d2de-d8f1-43ce-8f9c-e0b2e5f2b707', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'CORRECTIVE', 'Falla en el sistema de embrague', 80000, '2026-10-27 12:30:00+00', 240, '2026-10-27 16:30:00+00', 'IN_PROGRESS', '2026-10-27 12:40:00+00', NULL, NULL, NULL, NULL, 'f2af4508-06be-4d32-867b-91359cac7115', '56236fec-c43f-4c4a-8fac-21e9c41e6dcb', '8fd01e52-a296-4c2c-a0d1-651bb22ec8ea');
+INSERT INTO public.maintenances VALUES ('6fb23576-1fca-4de1-9592-f46106aeb5c3', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'PREVENTIVE', 'Revisión de los 30.000 km', 30500, '2026-12-01 12:30:00+00', 90, '2026-12-01 14:00:00+00', 'SCHEDULED', NULL, NULL, NULL, NULL, NULL, 'ea6cf891-a56f-4d57-a28f-a6405be224e4', 'f2835ef0-12e9-4a37-ba9f-67f626b60860', '8fd01e52-a296-4c2c-a0d1-651bb22ec8ea');
 
 
 --
 -- Data for Name: mechanics; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.mechanics (id, created_at, updated_at, deleted_at, name, email, specialty, is_active, user_id) FROM stdin;
-211ab1ad-fc35-4e04-9721-ce814766be58	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Carlos Pérez	carlos.perez@fleetcore.com	Motor y transmisión	t	d7faf955-225d-4713-bae2-2c806429600b
-e06f63de-4884-4879-b6c8-deebd04295f6	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Laura Gómez	laura.gomez@fleetcore.com	Frenos y suspensión	t	93e7a782-f4e7-4d4e-bd82-eecfa002ff51
-888f367d-4939-4c06-9cd8-a3d3f6636c30	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Pedro Ruiz	pedro.ruiz@fleetcore.com	Sistema eléctrico	f	\N
-\.
+INSERT INTO public.mechanics VALUES ('f2835ef0-12e9-4a37-ba9f-67f626b60860', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Carlos Pérez', 'carlos.perez@fleetcore.com', 'Motor y transmisión', true, 'a14a113c-1a88-490b-b186-c22bede7410b');
+INSERT INTO public.mechanics VALUES ('56236fec-c43f-4c4a-8fac-21e9c41e6dcb', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Laura Gómez', 'laura.gomez@fleetcore.com', 'Frenos y suspensión', true, '03df7336-281f-4ae6-85b4-36f9b60711ba');
+INSERT INTO public.mechanics VALUES ('5dc926a3-8608-470e-8a36-f17f1075d7f0', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Pedro Ruiz', 'pedro.ruiz@fleetcore.com', 'Sistema eléctrico', false, NULL);
 
 
 --
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.users (id, created_at, updated_at, deleted_at, name, email, password, role) FROM stdin;
-d304129d-99b4-4d9a-a6ce-182cf86b0977	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Administrador FleetCore	admin@fleetcore.com	$2b$10$2.x99mBQ9hlZuVDSYbYlke8k1NCLYo0PXQMGKrBks7S/ihvY8CqmW	ADMIN
-d7faf955-225d-4713-bae2-2c806429600b	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Carlos Pérez	carlos.perez@fleetcore.com	$2b$10$r0Qj1wh4c/6WjJNXOp8yK.XSkLqdOYTK1vDutkFYUdSqKIQU9KEFO	TECHNICIAN
-93e7a782-f4e7-4d4e-bd82-eecfa002ff51	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Laura Gómez	laura.gomez@fleetcore.com	$2b$10$p4RCuoAq/mUOPd7NJhW2nOut86fAv0mDty9CAgkVPdsscewnYiktu	TECHNICIAN
-\.
+INSERT INTO public.users VALUES ('b824078f-a403-4bd6-90cc-931a1c0a427e', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Administrador FleetCore', 'admin@fleetcore.com', '$2b$10$MPFv1A64lMG2I3Mdje6oO.g5qeKmlKwNygobet8A8wYBsDGw4Rdme', 'ADMIN');
+INSERT INTO public.users VALUES ('a14a113c-1a88-490b-b186-c22bede7410b', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Carlos Pérez', 'carlos.perez@fleetcore.com', '$2b$10$LVeXig5xiOrr9FvZJakpJuK7roOD78rD9HGh.mvk/hB7UuOZy24oW', 'TECHNICIAN');
+INSERT INTO public.users VALUES ('03df7336-281f-4ae6-85b4-36f9b60711ba', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Laura Gómez', 'laura.gomez@fleetcore.com', '$2b$10$KDVbPJwH1Lu0wBAIqTaCYOtq5qaJnNXtPK9wwS2duDK5KJZPb8eLG', 'TECHNICIAN');
 
 
 --
 -- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.vehicles (id, created_at, updated_at, deleted_at, plate, brand, model, year, mileage, status) FROM stdin;
-35e7db17-6841-4672-b39d-3770af3f8054	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	ABC123	Chevrolet	NPR	2020	52300	AVAILABLE
-bd799718-063a-4b81-9bf2-806b8ee9fb46	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	DEF456	Renault	Master	2022	30500	AVAILABLE
-232ba6c0-8384-4128-856b-45a9c69ffc48	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	GHI789	Hino	Dutro	2019	80000	IN_MAINTENANCE
-bd926aaa-4965-4e69-92e9-dfaddac10878	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	JKL012	Foton	Aumark	2015	120000	INACTIVE
-\.
+INSERT INTO public.vehicles VALUES ('f99776de-f521-4a4b-9404-223c5143585d', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'ABC123', 'Chevrolet', 'NPR', 2020, 52300, 'AVAILABLE');
+INSERT INTO public.vehicles VALUES ('ea6cf891-a56f-4d57-a28f-a6405be224e4', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'DEF456', 'Renault', 'Master', 2022, 30500, 'AVAILABLE');
+INSERT INTO public.vehicles VALUES ('f2af4508-06be-4d32-867b-91359cac7115', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'GHI789', 'Hino', 'Dutro', 2019, 80000, 'IN_MAINTENANCE');
+INSERT INTO public.vehicles VALUES ('fa72d751-dbc6-462f-a0ab-9ef25d20c020', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'JKL012', 'Foton', 'Aumark', 2015, 120000, 'INACTIVE');
 
 
 --
 -- Data for Name: workshops; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.workshops (id, created_at, updated_at, deleted_at, name, address, is_active) FROM stdin;
-18fe98af-df31-4657-9979-d0d5e551f2b7	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Taller Centro	Calle 50 # 45-20, Medellín	t
-3a701419-4860-4973-8f55-fb7d347c65bd	2026-10-27 20:52:33.158344+00	2026-10-27 20:52:33.158344+00	\N	Taller Norte	Carrera 65 # 98-10, Medellín	f
-\.
+INSERT INTO public.workshops VALUES ('8fd01e52-a296-4c2c-a0d1-651bb22ec8ea', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Taller Centro', 'Calle 50 # 45-20, Medellín', true);
+INSERT INTO public.workshops VALUES ('7b102fea-43be-4329-a419-c75d45b83a63', '2026-10-27 23:48:35.432652+00', '2026-10-27 23:48:35.432652+00', NULL, 'Taller Norte', 'Carrera 65 # 98-10, Medellín', false);
 
 
 --
@@ -454,5 +427,4 @@ ALTER TABLE ONLY public.maintenances
 -- PostgreSQL database dump complete
 --
 
-\unrestrict HXNrOluHtGbguj2OWvftpOzbb4uIiJvlPQ9TgTcbCedikB2KKiEvPuiut2fF8my
 
