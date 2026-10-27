@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Auth } from '../common/decorators/auth.decorator.js';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Role } from '../common/enums/role.enum.js';
 import { CreateMechanicDto } from './dto/create-mechanic.dto.js';
 import { QueryMechanicDto } from './dto/query-mechanic.dto.js';
@@ -22,6 +23,14 @@ export class MechanicsController {
   @Get()
   findAll(@Query() query: QueryMechanicDto) {
     return this.mechanicsService.findAll(query);
+  }
+
+  // Technician's own mechanic profile, resolved from the JWT
+  // Ficha de mecánico del propio técnico, se obtiene desde el JWT
+  @Auth(Role.TECHNICIAN)
+  @Get('me')
+  findMe(@CurrentUser('sub') userId: string) {
+    return this.mechanicsService.findByUserId(userId);
   }
 
   @Auth()
