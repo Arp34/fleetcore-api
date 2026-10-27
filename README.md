@@ -20,8 +20,8 @@ REST API to manage the lifecycle of preventive and corrective maintenance for th
 
 ```bash
 # 1. Clone and install dependencies
-git clone https://github.com/Arp34/Plantilla-nestjs.git
-cd Plantilla-nestjs
+git clone https://github.com/Arp34/fleetcore-api.git
+cd fleetcore-api
 npm install
 
 # 2. Environment variables
