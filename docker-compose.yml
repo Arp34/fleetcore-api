@@ -23,9 +23,12 @@ services:
     container_name: fleetcore_api
     restart: unless-stopped
     env_file: .env
-    # Inside the Docker network the API reaches Postgres by service name and internal port
-    # Dentro de la red de Docker la API llega a Postgres por el nombre del servicio y el puerto interno
+    # Inside the Docker network the API reaches Postgres by service name and internal port.
+    # PORT is fixed to 3000 inside the container; the host side of "ports" uses the .env PORT
+    # Dentro de la red de Docker la API llega a Postgres por el nombre del servicio y el puerto interno.
+    # PORT queda fijo en 3000 dentro del contenedor; el lado del host en "ports" usa el PORT del .env
     environment:
+      PORT: 3000
       DB_HOST: db
       DB_PORT: 5432
     ports:

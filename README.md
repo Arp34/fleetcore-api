@@ -49,6 +49,8 @@ docker exec fleetcore_api node dist/database/seed.js
 
 The API and the database communicate through the internal `fleetcore-net` network, and data persists in the `pgdata` volume.
 
+> If port `3000` is already in use on your machine, change `PORT` in `.env` (e.g. `PORT=3001`). Inside the container the API always listens on `3000`; `PORT` only sets the host port.
+
 ## 🔐 Environment variables
 
 | Variable | Description | Example |
