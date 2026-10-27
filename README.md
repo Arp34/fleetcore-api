@@ -234,4 +234,13 @@ npm run test:e2e      # e2e (requires: docker compose up -d db_test)
 ```
 
 - **Postman collection:** [`postman/FleetCore.postman_collection.json`](postman/FleetCore.postman_collection.json), with the main scenarios and automated tests (run it after a fresh seed).
+- **Swagger screenshots:** [`evidence/`](evidence/), see below.
 - **Database dump:** [`database/fleetcore_dump.sql`](database/fleetcore_dump.sql), with the schema and seeded data. To restore it: `psql -U postgres -d fleetcore -f database/fleetcore_dump.sql`.
+
+### Swagger evidence
+
+All endpoints documented in Swagger, grouped by module. The lock icon marks the protected routes (JWT `bearer`, or `api-key` for integrations); `auth/register` and `auth/login` are public.
+
+![Swagger endpoints: users, auth, vehicles, mechanics](evidence/swagger-endpoints-1.png)
+
+![Swagger endpoints: mechanics, workshops, maintenances, integrations](evidence/swagger-endpoints-2.png)
