@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from 
 import { ApiTags } from '@nestjs/swagger';
 import { Auth } from '../common/decorators/auth.decorator.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { PaginationDto } from '../common/dto/pagination.dto.js';
 import { Role } from '../common/enums/role.enum.js';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface.js';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto.js';
@@ -16,8 +17,8 @@ export class MaintenancesController {
 
   @Auth(Role.ADMIN)
   @Post()
-  create(@Body() dto: CreateMaintenanceDto) {
-    return this.maintenancesService.create(dto);
+  create(@Body() dto: CreateMaintenanceDto, @CurrentUser('sub') userId: string) {
+    return this.maintenancesService.create(dto, userId);
   }
 
   @Auth(Role.ADMIN)
@@ -32,6 +33,12 @@ export class MaintenancesController {
   @Get('active')
   findActive() {
     return this.maintenancesService.findActive();
+  }
+
+  @Auth(Role.ADMIN)
+  @Get('audit')
+  findAuditLog(@Query() query: PaginationDto) {
+    return this.maintenancesService.findAuditLog(query);
   }
 
   @Auth(Role.TECHNICIAN)
@@ -56,6 +63,12 @@ export class MaintenancesController {
   @Get('mechanic/:mechanicId')
   findByMechanic(@Param('mechanicId', ParseUUIDPipe) mechanicId: string) {
     return this.maintenancesService.findByMechanic(mechanicId);
+  }
+
+  @Auth(Role.ADMIN)
+  @Get(':id/audit')
+  findAuditByMaintenance(@Param('id', ParseUUIDPipe) id: string) {
+    return this.maintenancesService.findAuditByMaintenance(id);
   }
 
   @Auth(Role.ADMIN, Role.TECHNICIAN)

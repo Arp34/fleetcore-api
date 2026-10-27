@@ -1,10 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, type Relation } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, type Relation } from 'typeorm';
 import { AppBaseEntity } from '../../common/entities/base.entity.js';
 import type { Mechanic } from '../../mechanics/entities/mechanic.entity.js';
 import type { Vehicle } from '../../vehicles/entities/vehicle.entity.js';
 import type { Workshop } from '../../workshops/entities/workshop.entity.js';
 import { MaintenanceStatus } from '../enums/maintenance-status.enum.js';
 import { MaintenanceType } from '../enums/maintenance-type.enum.js';
+import type { MaintenanceStatusLog } from './maintenance-status-log.entity.js';
 
 // Postgres returns numeric as string (to avoid losing decimals); convert it back to number
 // Postgres devuelve numeric como texto (para no perder decimales); se convierte de nuevo a número
@@ -78,4 +79,7 @@ export class Maintenance extends AppBaseEntity {
   @ManyToOne('Workshop', { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'workshop_id' })
   workshop: Relation<Workshop>;
+
+  @OneToMany('MaintenanceStatusLog', 'maintenance')
+  statusLogs: Relation<MaintenanceStatusLog[]>;
 }

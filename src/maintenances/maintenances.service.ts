@@ -11,9 +11,11 @@ import { Vehicle } from '../vehicles/entities/vehicle.entity.js';
 import { VehicleStatus } from '../vehicles/enums/vehicle-status.enum.js';
 import { VehiclesService } from '../vehicles/vehicles.service.js';
 import { Workshop } from '../workshops/entities/workshop.entity.js';
+import type { PaginationDto } from '../common/dto/pagination.dto.js';
 import type { CreateMaintenanceDto } from './dto/create-maintenance.dto.js';
 import type { QueryMaintenanceDto } from './dto/query-maintenance.dto.js';
 import type { UpdateMaintenanceStatusDto } from './dto/update-maintenance-status.dto.js';
+import { MaintenanceStatusLog } from './entities/maintenance-status-log.entity.js';
 import { Maintenance } from './entities/maintenance.entity.js';
 import { MaintenanceStatus } from './enums/maintenance-status.enum.js';
 import { ACTIVE_STATUSES, assertClosingData, assertValidTransition } from './maintenance-status.rules.js';
@@ -24,6 +26,7 @@ const FULL_RELATIONS = { vehicle: true, mechanic: true, workshop: true };
 export class MaintenancesService {
   constructor(
     @InjectRepository(Maintenance) private readonly maintenancesRepo: Repository<Maintenance>,
+    @InjectRepository(MaintenanceStatusLog) private readonly logsRepo: Repository<MaintenanceStatusLog>,
     private readonly dataSource: DataSource,
     private readonly vehiclesService: VehiclesService,
     private readonly mechanicsService: MechanicsService,
@@ -31,7 +34,7 @@ export class MaintenancesService {
 
   // Transaction: every check and the insert run together; if any step fails nothing is saved
   // Transacción: todas las validaciones y el insert van juntos; si algo falla no se guarda nada
-  async create(dto: CreateMaintenanceDto) {
+  async create(dto: CreateMaintenanceDto, userId: string) {
     const saved = await this.dataSource.transaction(async (manager) => {
       // pessimistic_write = SELECT ... FOR UPDATE: two simultaneous requests for the same vehicle/mechanic wait in line
       // pessimistic_write = SELECT ... FOR UPDATE: dos peticiones simultáneas al mismo vehículo/mecánico hacen fila
@@ -94,7 +97,13 @@ export class MaintenancesService {
 
       // Initial status is always SCHEDULED (column default); the client cannot choose it
       // El estado inicial siempre es SCHEDULED (default de la columna); el cliente no lo elige
-      return manager.save(manager.create(Maintenance, { ...dto, estimatedEndAt: end }));
+      const maintenance = await manager.save(manager.create(Maintenance, { ...dto, estimatedEndAt: end }));
+      // Audit row saved in the same transaction: if the insert fails, no orphan log remains
+      // Fila de auditoría guardada en la misma transacción: si el insert falla, no queda un log huérfano
+      await manager.save(MaintenanceStatusLog, {
+        maintenanceId: maintenance.id, fromStatus: null, toStatus: maintenance.status, changedById: userId,
+      });
+      return maintenance;
     });
     return this.maintenancesRepo.findOne({ where: { id: saved.id }, relations: FULL_RELATIONS });
   }
@@ -117,9 +126,14 @@ export class MaintenancesService {
       });
 
       if (dto.status === MaintenanceStatus.IN_PROGRESS) {
+        // Re-check: vehicle, mechanic or workshop may have been deactivated after scheduling
+        // Se revisa de nuevo: el vehículo, mecánico o taller pudo inactivarse después de programar
         if (vehicle.status === VehicleStatus.INACTIVE) {
           throw new ConflictException(`El vehículo ${vehicle.plate} está inactivo`);
         }
+        if (!mechanic.isActive) throw new ConflictException(`El mecánico ${mechanic.name} está inactivo`);
+        const workshop = await manager.findOneByOrFail(Workshop, { id: maintenance.workshopId });
+        if (!workshop.isActive) throw new ConflictException(`El taller ${workshop.name} está inactivo`);
         // A technician can only work on one maintenance at a time
         // Un técnico solo puede estar trabajando en un mantenimiento a la vez
         const mechanicBusy = await manager.exists(Maintenance, {
@@ -161,6 +175,9 @@ export class MaintenancesService {
         vehicle.status = VehicleStatus.AVAILABLE;
       }
 
+      await manager.save(MaintenanceStatusLog, {
+        maintenanceId: maintenance.id, fromStatus: maintenance.status, toStatus: dto.status, changedById: user.sub,
+      });
       maintenance.status = dto.status;
       await manager.save(maintenance);
       await manager.save(vehicle);
@@ -222,6 +239,44 @@ export class MaintenancesService {
     if (!maintenance) throw new NotFoundException(`Mantenimiento ${id} no encontrado`);
     this.assertCanAccess(maintenance.mechanic, user);
     return maintenance;
+  }
+
+  async findAuditLog({ page, limit }: PaginationDto) {
+    const [items, total] = await this.logsRepo.findAndCount({
+      relations: { maintenance: { vehicle: true }, changedBy: true },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return {
+      items: items.map((log) => this.toAuditItem(log)),
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async findAuditByMaintenance(id: string) {
+    const exists = await this.maintenancesRepo.exists({ where: { id } });
+    if (!exists) throw new NotFoundException(`Mantenimiento ${id} no encontrado`);
+    const logs = await this.logsRepo.find({
+      where: { maintenanceId: id },
+      relations: { maintenance: { vehicle: true }, changedBy: true },
+      order: { createdAt: 'ASC' },
+    });
+    return logs.map((log) => this.toAuditItem(log));
+  }
+
+  private toAuditItem(log: MaintenanceStatusLog) {
+    return {
+      id: log.id,
+      maintenanceId: log.maintenanceId,
+      vehiclePlate: log.maintenance.vehicle.plate,
+      fromStatus: log.fromStatus,
+      toStatus: log.toStatus,
+      changedBy: log.changedBy
+        ? { id: log.changedBy.id, name: log.changedBy.name, role: log.changedBy.role }
+        : null,
+      changedAt: log.createdAt,
+    };
   }
 
   async getHistoryById(vehicleId: string) {

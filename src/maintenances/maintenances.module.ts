@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MechanicsModule } from '../mechanics/mechanics.module.js';
 import { VehiclesModule } from '../vehicles/vehicles.module.js';
+import { MaintenanceStatusLog } from './entities/maintenance-status-log.entity.js';
 import { Maintenance } from './entities/maintenance.entity.js';
 import { MaintenancesController } from './maintenances.controller.js';
 import { MaintenancesService } from './maintenances.service.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Maintenance]), VehiclesModule, MechanicsModule],
+  imports: [TypeOrmModule.forFeature([Maintenance, MaintenanceStatusLog]), VehiclesModule, MechanicsModule],
   controllers: [MaintenancesController],
   providers: [MaintenancesService],
   exports: [MaintenancesService],

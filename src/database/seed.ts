@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import { DataSource, type EntityManager, type EntityTarget, type FindOptionsWhere, type ObjectLiteral } from 'typeorm';
 import { AppModule } from '../app.module.js';
 import { Role } from '../common/enums/role.enum.js';
+import { MaintenanceStatusLog } from '../maintenances/entities/maintenance-status-log.entity.js';
 import { Maintenance } from '../maintenances/entities/maintenance.entity.js';
 import { MaintenanceStatus } from '../maintenances/enums/maintenance-status.enum.js';
 import { MaintenanceType } from '../maintenances/enums/maintenance-type.enum.js';
@@ -32,6 +33,25 @@ async function findOrCreate<T extends ObjectLiteral>(
   return manager.save(entity, manager.create(entity, { ...where, ...data } as T));
 }
 
+// Writes the audit trail of a seeded maintenance (only if it has none yet, to stay idempotent)
+// Escribe la auditoría de un mantenimiento del seed (solo si aún no tiene, para seguir siendo idempotente)
+async function seedStatusLogs(
+  manager: EntityManager,
+  maintenance: Maintenance,
+  changedById: string,
+  steps: { status: MaintenanceStatus; at: Date }[],
+) {
+  if (await manager.exists(MaintenanceStatusLog, { where: { maintenanceId: maintenance.id } })) return;
+  let fromStatus: MaintenanceStatus | null = null;
+  for (const step of steps) {
+    created++;
+    await manager.save(MaintenanceStatusLog, {
+      maintenanceId: maintenance.id, fromStatus, toStatus: step.status, changedById, createdAt: step.at,
+    });
+    fromStatus = step.status;
+  }
+}
+
 async function seed(manager: EntityManager) {
   // Users
   const userData = [
@@ -45,7 +65,7 @@ async function seed(manager: EntityManager) {
       await findOrCreate(manager, User, { email: data.email }, { ...data, password: await hash(password, 10) }),
     );
   }
-  const [, carlosUser, lauraUser] = users;
+  const [adminUser, carlosUser, lauraUser] = users;
 
   // Mechanics: 2 active linked to the technicians, 1 inactive
   const carlos = await findOrCreate(manager, Mechanic, { email: 'carlos.perez@fleetcore.com' }, {
@@ -81,7 +101,7 @@ async function seed(manager: EntityManager) {
   });
 
   // Maintenances: 2 COMPLETED (history of ABC123), 1 IN_PROGRESS (GHI789), 1 SCHEDULED (DEF456)
-  await findOrCreate(manager, Maintenance, { vehicleId: abc.id, description: 'Cambio de aceite y filtros' }, {
+  const oilChange = await findOrCreate(manager, Maintenance, { vehicleId: abc.id, description: 'Cambio de aceite y filtros' }, {
     type: MaintenanceType.PREVENTIVE, mileage: 45000, status: MaintenanceStatus.COMPLETED,
     scheduledAt: new Date('2026-09-15T13:00:00Z'), durationMinutes: 180,
     estimatedEndAt: new Date('2026-09-15T16:00:00Z'), startedAt: new Date('2026-09-15T13:05:00Z'),
@@ -89,7 +109,7 @@ async function seed(manager: EntityManager) {
     finalCost: 350000, finishedAt: new Date('2026-09-15T16:30:00Z'), finalMileage: 45000,
     mechanicId: carlos.id, workshopId: norte.id,
   });
-  await findOrCreate(manager, Maintenance, { vehicleId: abc.id, description: 'Reemplazo de pastillas de freno' }, {
+  const brakes = await findOrCreate(manager, Maintenance, { vehicleId: abc.id, description: 'Reemplazo de pastillas de freno' }, {
     type: MaintenanceType.CORRECTIVE, mileage: 52300, status: MaintenanceStatus.COMPLETED,
     scheduledAt: new Date('2026-10-10T12:00:00Z'), durationMinutes: 120,
     estimatedEndAt: new Date('2026-10-10T14:00:00Z'), startedAt: new Date('2026-10-10T12:10:00Z'),
@@ -97,18 +117,36 @@ async function seed(manager: EntityManager) {
     finalCost: 480000, finishedAt: new Date('2026-10-10T14:00:00Z'), finalMileage: 52300,
     mechanicId: laura.id, workshopId: centro.id,
   });
-  await findOrCreate(manager, Maintenance, { vehicleId: ghi.id, description: 'Falla en el sistema de embrague' }, {
+  const clutch = await findOrCreate(manager, Maintenance, { vehicleId: ghi.id, description: 'Falla en el sistema de embrague' }, {
     type: MaintenanceType.CORRECTIVE, mileage: 80000, status: MaintenanceStatus.IN_PROGRESS,
     scheduledAt: new Date('2026-10-27T12:30:00Z'), durationMinutes: 240,
     estimatedEndAt: new Date('2026-10-27T16:30:00Z'), startedAt: new Date('2026-10-27T12:40:00Z'),
     mechanicId: laura.id, workshopId: centro.id,
   });
-  await findOrCreate(manager, Maintenance, { vehicleId: def.id, description: 'Revisión de los 30.000 km' }, {
+  const review = await findOrCreate(manager, Maintenance, { vehicleId: def.id, description: 'Revisión de los 30.000 km' }, {
     type: MaintenanceType.PREVENTIVE, mileage: 30500, status: MaintenanceStatus.SCHEDULED,
     scheduledAt: new Date('2026-12-01T12:30:00Z'), durationMinutes: 90,
     estimatedEndAt: new Date('2026-12-01T14:00:00Z'),
     mechanicId: carlos.id, workshopId: centro.id,
   });
+
+  // Audit trail (who changed each status and when)
+  const { SCHEDULED, IN_PROGRESS, COMPLETED } = MaintenanceStatus;
+  await seedStatusLogs(manager, oilChange, adminUser.id, [
+    { status: SCHEDULED, at: new Date('2026-09-10T15:00:00Z') },
+    { status: IN_PROGRESS, at: new Date('2026-09-15T13:05:00Z') },
+    { status: COMPLETED, at: new Date('2026-09-15T16:30:00Z') },
+  ]);
+  await seedStatusLogs(manager, brakes, adminUser.id, [
+    { status: SCHEDULED, at: new Date('2026-10-05T14:00:00Z') },
+    { status: IN_PROGRESS, at: new Date('2026-10-10T12:10:00Z') },
+    { status: COMPLETED, at: new Date('2026-10-10T14:00:00Z') },
+  ]);
+  await seedStatusLogs(manager, clutch, adminUser.id, [
+    { status: SCHEDULED, at: new Date('2026-10-26T20:00:00Z') },
+    { status: IN_PROGRESS, at: new Date('2026-10-27T12:40:00Z') },
+  ]);
+  await seedStatusLogs(manager, review, adminUser.id, [{ status: SCHEDULED, at: new Date('2026-10-27T15:00:00Z') }]);
 }
 
 async function run() {
