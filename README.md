@@ -51,6 +51,18 @@ The API and the database communicate through the internal `fleetcore-net` networ
 
 > If port `3000` is already in use on your machine, change `PORT` in `.env` (e.g. `PORT=3001`). Inside the container the API always listens on `3000`; `PORT` only sets the host port.
 
+### Running Docker and development mode at the same time
+
+The Docker API and `npm run start:dev` cannot share a port. To keep the Docker API running and also start the development server, give the dev server a different port for that run only (no file changes needed):
+
+```bash
+PORT=3050 npm run start:dev
+```
+
+An environment variable set on the command line takes priority over `.env`. Both instances use the same database, so data created in one is visible in the other.
+
+To check whether a port is free: `ss -ltn | grep :3050` (no output means it is free).
+
 ## 🔐 Environment variables
 
 | Variable | Description | Example |
