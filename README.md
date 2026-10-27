@@ -11,35 +11,50 @@ REST API to manage the lifecycle of preventive and corrective maintenance for th
 - **GitHub:** [@Arp34](https://github.com/Arp34)
 - **Email:** axeldrp3407@gmail.com
 
-## 🚀 Requirements
+## 📋 Requirements
 
 - Node.js 24 LTS
 - Docker and Docker Compose
 
-## ⚙️ Installation and running
+---
+
+## 🚀 Getting started (step by step)
+
+Follow the steps **in this order**. Option A is the recommended one for a live demo, because the API reloads automatically when the code changes.
+
+### Option A — Local development (recommended)
 
 ```bash
-# 1. Clone and install dependencies
+# 1. Clone the repository and install dependencies
 git clone https://github.com/Arp34/fleetcore-api.git
 cd fleetcore-api
 npm install
 
-# 2. Environment variables
+# 2. Create the environment file
 cp .env.example .env
 
-# 3. Start PostgreSQL
+# 3. Start PostgreSQL (Docker)
 docker compose up -d db
 
-# 4. Seed the database (idempotent: can be run several times without duplicating data)
+# 4. Load the seed data (creates tables + test data; safe to run more than once)
 npm run seed
 
-# 5. Start the API in development mode
+# 5. Start the API
 npm run start:dev
 ```
 
-API: `http://localhost:3000/api`
+When the terminal shows `Nest application successfully started`, the API is ready:
 
-### Docker option (API + PostgreSQL)
+- API: `http://localhost:3000/api`
+- Swagger: `http://localhost:3000/docs`
+
+**6. Quick check** (in a second terminal): this should print `"success":true` and a token.
+
+```bash
+curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"admin@fleetcore.com","password":"Admin12345"}'
+```
+
+### Option B — Everything in Docker (API + PostgreSQL)
 
 ```bash
 cp .env.example .env
@@ -49,19 +64,246 @@ docker exec fleetcore_api node dist/database/seed.js
 
 The API and the database communicate through the internal `fleetcore-net` network, and data persists in the `pgdata` volume.
 
-> If port `3000` is already in use on your machine, change `PORT` in `.env` (e.g. `PORT=3001`). Inside the container the API always listens on `3000`; `PORT` only sets the host port.
+### Reset the data to the initial seed
 
-### Running Docker and development mode at the same time
-
-The Docker API and `npm run start:dev` cannot share a port. To keep the Docker API running and also start the development server, give the dev server a different port for that run only (no file changes needed):
+Use this before a demo, or if the data was modified by previous tests:
 
 ```bash
-PORT=3050 npm run start:dev
+docker exec prueba_db psql -U postgres -d fleetcore -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+npm run seed
 ```
 
-An environment variable set on the command line takes priority over `.env`. Both instances use the same database, so data created in one is visible in the other.
+With Option B, replace the last line with `docker exec fleetcore_api node dist/database/seed.js`.
+
+### Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| `EADDRINUSE` / `port is already allocated` on `3000` | Another app uses the port. Change `PORT` in `.env` (e.g. `PORT=3001`) or start with `PORT=3050 npm run start:dev`. Inside the Docker container the API always listens on `3000`; `PORT` only sets the host port. |
+| The API returns empty lists / login fails with `401` | The database has no data: run `npm run seed`. |
+| Data disappeared after `docker compose down -v` | `-v` deletes the database volume. Use `docker compose down` or `docker compose stop` to keep the data, then run `npm run seed` again if needed. |
+| Docker API and `npm run start:dev` at the same time | They cannot share a port. Keep Docker on `PORT` and start dev on another one: `PORT=3050 npm run start:dev` (a variable set on the command line takes priority over `.env`). Both use the same database. |
 
 To check whether a port is free: `ss -ltn | grep :3050` (no output means it is free).
+
+---
+
+## 🔑 Test credentials and seeded data
+
+### Users
+
+| Role | Email | Password | Linked mechanic |
+|---|---|---|---|
+| ADMIN | `admin@fleetcore.com` | `Admin12345` | — |
+| TECHNICIAN | `carlos.perez@fleetcore.com` | `Tecnico123` | Carlos Pérez |
+| TECHNICIAN | `laura.gomez@fleetcore.com` | `Tecnico123` | Laura Gómez |
+
+### Integration API Keys (`x-api-key` header)
+
+`demo-key-partner-1` · `demo-key-partner-2`
+
+### Mechanics, workshops and vehicles
+
+| Mechanic | Specialty | Status |
+|---|---|---|
+| Carlos Pérez | Motor y transmisión | Active (user `carlos.perez@...`) |
+| Laura Gómez | Frenos y suspensión | Active (user `laura.gomez@...`) |
+| Pedro Ruiz | Sistema eléctrico | **Inactive** |
+
+| Workshop | Status |
+|---|---|
+| Taller Centro | Active |
+| Taller Norte | **Inactive** |
+
+| Plate | Vehicle | Mileage | Status | Maintenances |
+|---|---|---|---|---|
+| `ABC123` | Chevrolet NPR 2020 | 52300 | AVAILABLE | 2 COMPLETED (history) |
+| `DEF456` | Renault Master 2022 | 30500 | AVAILABLE | 1 SCHEDULED (Carlos, 2026-12-01) |
+| `GHI789` | Hino Dutro 2019 | 80000 | IN_MAINTENANCE | 1 IN_PROGRESS (Laura) |
+| `JKL012` | Foton Aumark 2015 | 120000 | **INACTIVE** | — |
+
+Every seeded maintenance also has its audit trail (status changes).
+
+IDs are UUIDs generated by the database, so they change after a reset. Get them with `GET /api/vehicles/plate/ABC123`, `GET /api/mechanics` and `GET /api/workshops/all`, or let the demo script below find them.
+
+---
+
+## 📚 Swagger
+
+**`http://localhost:3000/docs`**
+
+1. Run `POST /api/auth/login` with a user from the table above.
+2. Copy the `accessToken` from the response.
+3. Click **Authorize**, paste it in **bearer** and click *Authorize*.
+4. For the integrations endpoint, paste `demo-key-partner-1` in **api-key**.
+
+To switch between ADMIN and TECHNICIAN, log in with the other user and paste the new token in **Authorize**.
+
+---
+
+## 🎬 Demo guide (copy & paste)
+
+Run the blocks **in order, in the same terminal**, with the API running and the data freshly seeded (see *Reset the data*). Each command prints `✅ <status>` or `❌ <status> → <message>`; the comment at the end of each line says what is expected.
+
+### 0. Setup (run once per terminal)
+
+```bash
+API=http://localhost:3000/api        # change the port if you use another one
+JSON='Content-Type: application/json'
+
+# show: prints the HTTP status and message; optional argument: a field of "data" (e.g. '.status') or "full"
+show() { node -e '
+  let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+    const r = JSON.parse(s), arg = process.argv[1];
+    console.log(r.success ? "✅ " + r.statusCode : "❌ " + r.statusCode + " → " + JSON.stringify(r.message));
+    if (r.success && arg === "full") console.log(JSON.stringify(r.data, null, 2));
+    else if (r.success && arg) console.log("   " + arg + " = " + JSON.stringify(eval("r.data" + arg)));
+  });' "$1"; }
+# pick: extracts a value from "data"
+pick() { node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8')).data$1"; }
+login() { curl -s -X POST $API/auth/login -H "$JSON" -d "{\"email\":\"$1\",\"password\":\"$2\"}" | pick .accessToken; }
+new_maintenance() {  # vehicleId mechanicId workshopId mileage scheduledAt (duration: 90 min)
+  curl -s -X POST $API/maintenances -H "$ADMIN" -H "$JSON" -d "{\"vehicleId\":\"$1\",\"mechanicId\":\"$2\",\"workshopId\":\"$3\",\"type\":\"PREVENTIVE\",\"description\":\"Cambio de aceite y filtros\",\"mileage\":$4,\"scheduledAt\":\"$5\",\"durationMinutes\":90}"; }
+set_status() { curl -s -X PATCH $API/maintenances/$1/status -H "$2" -H "$JSON" -d "$3"; }
+
+# Tokens
+ADMIN="Authorization: Bearer $(login admin@fleetcore.com Admin12345)"
+CARLOS="Authorization: Bearer $(login carlos.perez@fleetcore.com Tecnico123)"
+LAURA="Authorization: Bearer $(login laura.gomez@fleetcore.com Tecnico123)"
+
+# IDs of the seeded data
+ABC=$(curl -s $API/vehicles/plate/ABC123 -H "$ADMIN" | pick .id)
+GHI=$(curl -s $API/vehicles/plate/GHI789 -H "$ADMIN" | pick .id)
+JKL=$(curl -s $API/vehicles/plate/JKL012 -H "$ADMIN" | pick .id)
+CARLOS_ID=$(curl -s $API/mechanics -H "$ADMIN" | pick ".find((m) => m.name === 'Carlos Pérez').id")
+PEDRO_ID=$(curl -s $API/mechanics -H "$ADMIN" | pick ".find((m) => m.name === 'Pedro Ruiz').id")
+CENTRO=$(curl -s $API/workshops/all -H "$ADMIN" | pick ".find((w) => w.name === 'Taller Centro').id")
+NORTE=$(curl -s $API/workshops/all -H "$ADMIN" | pick ".find((w) => w.name === 'Taller Norte').id")
+echo "ABC123=$ABC  Carlos=$CARLOS_ID  Taller Centro=$CENTRO"
+```
+
+### 1. Authentication and roles
+
+```bash
+curl -s $API/vehicles | show                                                 # 401 no token
+curl -s $API/vehicles -H "Authorization: Bearer fake.token.value" | show     # 401 invalid token
+curl -s -X POST $API/auth/login -H "$JSON" -d '{"email":"admin@fleetcore.com","password":"Wrong1234"}' | show   # 401 wrong password
+curl -s $API/users/me -H "$CARLOS" | show '.role'                            # 200 TECHNICIAN
+curl -s $API/users -H "$CARLOS" | show                                       # 403 technician cannot list users
+curl -s -X POST $API/auth/register -H "$JSON" -d "{\"name\":\"Nuevo Tecnico\",\"email\":\"nuevo$RANDOM@fleetcore.com\",\"password\":\"Clave1234\"}" | show '.user.role'   # 201 always TECHNICIAN
+curl -s -X POST $API/auth/register -H "$JSON" -d '{"name":"Hacker","email":"hacker@fleetcore.com","password":"Clave1234","role":"ADMIN"}' | show   # 400 role cannot be chosen
+```
+
+### 2. Vehicles
+
+```bash
+curl -s "$API/vehicles?page=1&limit=10" -H "$ADMIN" | show '.meta'           # 200 paginated list
+curl -s "$API/vehicles?status=INACTIVE" -H "$ADMIN" | show '.items.map((v) => v.plate)'   # 200 filter by status
+curl -s $API/vehicles/plate/abc123 -H "$ADMIN" | show '.plate'               # 200 search by plate (case-insensitive)
+NEW_PLATE="DMO$RANDOM"
+NEW_VEHICLE=$(curl -s -X POST $API/vehicles -H "$ADMIN" -H "$JSON" -d "{\"plate\":\"$NEW_PLATE\",\"brand\":\"Kia\",\"model\":\"K2500\",\"year\":2023,\"mileage\":1000}" | pick .id); echo "created $NEW_PLATE → $NEW_VEHICLE"   # 201
+curl -s -X POST $API/vehicles -H "$ADMIN" -H "$JSON" -d '{"plate":"ABC123","brand":"X","model":"Y","year":2020,"mileage":1}' | show        # 409 duplicated plate
+curl -s -X POST $API/vehicles -H "$ADMIN" -H "$JSON" -d '{"plate":"A","year":1900}' | show                                                  # 400 validation errors
+curl -s -X POST $API/vehicles -H "$CARLOS" -H "$JSON" -d '{"plate":"TEC999","brand":"X","model":"Y","year":2020,"mileage":1}' | show       # 403 technician cannot create
+curl -s -X PATCH $API/vehicles/$NEW_VEHICLE -H "$ADMIN" -H "$JSON" -d '{"mileage":1500}' | show '.mileage'   # 200 update
+curl -s -X PATCH $API/vehicles/$NEW_VEHICLE -H "$ADMIN" -H "$JSON" -d '{"mileage":10}' | show                # 400 mileage cannot go down
+curl -s -X DELETE $API/vehicles/$NEW_VEHICLE -H "$ADMIN" | show '.status'                                     # 200 logical delete → INACTIVE
+curl -s -X PATCH $API/vehicles/$NEW_VEHICLE/activate -H "$ADMIN" | show '.status'                             # 200 → AVAILABLE again
+curl -s -X DELETE $API/vehicles/$GHI -H "$ADMIN" | show                                                       # 409 cannot deactivate a vehicle in maintenance
+```
+
+### 3. Mechanics and workshops
+
+```bash
+curl -s $API/mechanics -H "$ADMIN" | show '.map((m) => m.name + ": " + (m.isActive ? "active" : "inactive"))'   # 200
+curl -s "$API/mechanics?isActive=false" -H "$ADMIN" | show '.map((m) => m.name)'      # 200 only inactive
+curl -s $API/mechanics/me -H "$CARLOS" | show '.name'                                 # 200 technician's own profile
+curl -s $API/workshops -H "$CARLOS" | show '.map((w) => w.name)'                      # 200 only active workshops
+curl -s $API/workshops/all -H "$ADMIN" | show '.map((w) => w.name + ": " + w.isActive)'   # 200 all workshops (ADMIN)
+```
+
+### 4. Maintenance business rules
+
+```bash
+new_maintenance $GHI $CARLOS_ID $CENTRO 90000 2027-01-10T07:30:00-05:00 | show     # 409 vehicle already has an active maintenance
+new_maintenance $JKL $CARLOS_ID $CENTRO 130000 2027-01-10T07:30:00-05:00 | show    # 409 inactive vehicle
+new_maintenance $ABC $PEDRO_ID $CENTRO 60000 2027-01-10T07:30:00-05:00 | show      # 409 inactive mechanic
+new_maintenance $ABC $CARLOS_ID $NORTE 60000 2027-01-10T07:30:00-05:00 | show      # 409 inactive workshop
+new_maintenance $ABC $CARLOS_ID $CENTRO 100 2027-01-10T07:30:00-05:00 | show       # 400 mileage lower than the vehicle's
+new_maintenance $ABC $CARLOS_ID $CENTRO 60000 2025-01-10T07:30:00-05:00 | show     # 400 date in the past
+M1=$(new_maintenance $ABC $CARLOS_ID $CENTRO 60000 2027-01-10T07:30:00-05:00 | pick .id); echo "created 07:30-09:00 → $M1"   # 201 SCHEDULED
+new_maintenance $NEW_VEHICLE $CARLOS_ID $CENTRO 1500 2027-01-10T08:00:00-05:00 | show          # 409 Carlos is busy 07:30-09:00 (overlap)
+new_maintenance $NEW_VEHICLE $CARLOS_ID $CENTRO 1500 2027-01-10T09:00:00-05:00 | show '.status'   # 201 starts at 09:00 → back-to-back is allowed
+```
+
+### 5. Status lifecycle
+
+```bash
+set_status $M1 "$LAURA" '{"status":"IN_PROGRESS"}' | show                                 # 403 not assigned to Laura
+set_status $M1 "$CARLOS" '{"status":"IN_PROGRESS"}' | show '.vehicle.status'              # 200 vehicle → IN_MAINTENANCE
+set_status $M1 "$CARLOS" '{"status":"COMPLETED"}' | show                                  # 400 closing data is missing
+set_status $M1 "$CARLOS" "{\"status\":\"COMPLETED\",\"workPerformed\":\"Cambio de aceite 15W40 y filtros\",\"finalCost\":350000,\"finishedAt\":\"$(node -pe 'new Date().toISOString()')\",\"finalMileage\":60050}" | show '.vehicle.status'   # 200 vehicle → AVAILABLE
+set_status $M1 "$ADMIN" '{"status":"IN_PROGRESS"}' | show                                 # 409 COMPLETED is a final state
+M2=$(curl -s "$API/maintenances?vehicleId=$NEW_VEHICLE" -H "$ADMIN" | pick .items[0].id)
+set_status $M2 "$ADMIN" '{"status":"CANCELLED"}' | show '.status'                         # 200 SCHEDULED → CANCELLED
+set_status $M2 "$ADMIN" '{"status":"COMPLETED"}' | show                                   # 409 CANCELLED is a final state
+```
+
+### 6. Queries, history and audit
+
+```bash
+curl -s "$API/maintenances?page=1&limit=5" -H "$ADMIN" | show '.meta'                                   # 200 all (paginated)
+curl -s $API/maintenances/active -H "$ADMIN" | show '.map((m) => m.vehicle.plate + " " + m.status)'      # 200 active
+curl -s $API/maintenances/vehicle/$ABC -H "$ADMIN" | show '.length'                                     # 200 by vehicle
+curl -s $API/maintenances/mechanic/$CARLOS_ID -H "$ADMIN" | show '.length'                              # 200 by mechanic
+curl -s $API/maintenances/my -H "$CARLOS" | show '.map((m) => m.vehicle.plate + " " + m.status + " @ " + m.workshop.name)'   # 200 technician's own
+curl -s $API/maintenances -H "$CARLOS" | show                                                           # 403 technician cannot list all
+curl -s $API/maintenances/vehicle/$ABC/history -H "$ADMIN" | show '.maintenances.map((m) => m.description)'   # 200 history (COMPLETED)
+curl -s $API/maintenances/$M1/audit -H "$ADMIN" | show '.map((l) => (l.fromStatus || "∅") + " → " + l.toStatus + " by " + l.changedBy.name)'   # 200 audit trail
+```
+
+### 7. External integration (`x-api-key`)
+
+```bash
+curl -s $API/integrations/vehicles/ABC123/history | show                                   # 401 no API key
+curl -s $API/integrations/vehicles/ABC123/history -H "x-api-key: wrong-key" | show         # 401 invalid API key
+curl -s $API/integrations/vehicles/NOP000/history -H "x-api-key: demo-key-partner-1" | show   # 404 unknown plate
+curl -s $API/integrations/vehicles/ABC123/history -H "x-api-key: demo-key-partner-1" | show full   # 200 full response
+```
+
+### Same demo in Swagger or Postman
+
+- **Postman:** import [`postman/FleetCore.postman_collection.json`](postman/FleetCore.postman_collection.json) and run it with the *Collection Runner* (it saves tokens and IDs automatically and checks every expected status code). Change the `baseUrl` variable if you use another port. From the terminal: `npx newman run postman/FleetCore.postman_collection.json`.
+- **Swagger:** authorize as described above, get the IDs with `GET /api/vehicles/plate/ABC123`, `GET /api/mechanics` and `GET /api/workshops/all`, and use these bodies:
+
+`POST /api/maintenances` (ADMIN):
+
+```json
+{
+  "vehicleId": "<ABC123 id>",
+  "mechanicId": "<Carlos Pérez id>",
+  "workshopId": "<Taller Centro id>",
+  "type": "PREVENTIVE",
+  "description": "Cambio de aceite y filtros",
+  "mileage": 60000,
+  "scheduledAt": "2027-01-10T07:30:00-05:00",
+  "durationMinutes": 90
+}
+```
+
+`PATCH /api/maintenances/{id}/status` (login as `carlos.perez@fleetcore.com`), first `{ "status": "IN_PROGRESS" }`, then:
+
+```json
+{
+  "status": "COMPLETED",
+  "workPerformed": "Cambio de aceite 15W40 y filtros",
+  "finalCost": 350000,
+  "finishedAt": "<current date, e.g. 2026-10-28T10:00:00-05:00>",
+  "finalMileage": 60050
+}
+```
+
+---
 
 ## 🔐 Environment variables
 
@@ -75,32 +317,6 @@ To check whether a port is free: `ss -ltn | grep :3050` (no output means it is f
 | `JWT_SECRET` | Secret used to sign tokens (min. 16 characters) | `cambia-este-secreto-...` |
 | `JWT_EXPIRES_IN` | Token lifetime | `1h` |
 | `API_KEYS` | Valid keys for integrations, comma-separated | `demo-key-partner-1,demo-key-partner-2` |
-
-## 📚 Swagger documentation
-
-**`http://localhost:3000/docs`**
-
-1. Call `POST /api/auth/login` with one of the test credentials.
-2. Copy the `accessToken` and paste it in **Authorize → bearer**.
-3. For the integrations endpoint, use **Authorize → api-key** with `demo-key-partner-1`.
-
-## 🔑 Test credentials (seed)
-
-| Role | Email | Password | Linked mechanic |
-|---|---|---|---|
-| ADMIN | `admin@fleetcore.com` | `Admin12345` | — |
-| TECHNICIAN | `carlos.perez@fleetcore.com` | `Tecnico123` | Carlos Pérez |
-| TECHNICIAN | `laura.gomez@fleetcore.com` | `Tecnico123` | Laura Gómez |
-
-Integration API Key: `demo-key-partner-1`
-
-### Seeded data
-
-- **Users:** 1 ADMIN and 2 TECHNICIAN.
-- **Mechanics:** Carlos Pérez and Laura Gómez (active, linked to the technicians) and Pedro Ruiz (inactive).
-- **Workshops:** Taller Centro (active) and Taller Norte (inactive).
-- **Vehicles:** `ABC123` and `DEF456` (AVAILABLE), `GHI789` (IN_MAINTENANCE) and `JKL012` (INACTIVE).
-- **Maintenances:** 2 COMPLETED for `ABC123` (history), 1 IN_PROGRESS for `GHI789` and 1 SCHEDULED for `DEF456`, each with its audit trail.
 
 ## 🧭 Main endpoints
 
@@ -145,5 +361,5 @@ npm run test:cov      # coverage
 npm run test:e2e      # e2e (requires: docker compose up -d db_test)
 ```
 
-- **Postman collection:** [`postman/FleetCore.postman_collection.json`](postman/FleetCore.postman_collection.json). Import it and run it in order with the *Collection Runner* after `npm run seed`; it covers the main scenarios with automated tests. It can also be run from the terminal with `npx newman run postman/FleetCore.postman_collection.json`.
+- **Postman collection:** [`postman/FleetCore.postman_collection.json`](postman/FleetCore.postman_collection.json), with the main scenarios and automated tests (run it after a fresh seed).
 - **Database dump:** [`database/fleetcore_dump.sql`](database/fleetcore_dump.sql), with the schema and seeded data. To restore it: `psql -U postgres -d fleetcore -f database/fleetcore_dump.sql`.
