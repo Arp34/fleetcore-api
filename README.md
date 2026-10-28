@@ -63,7 +63,12 @@ docker compose up -d --build db api
 docker exec fleetcore_api node dist/database/seed.js
 ```
 
-The API and the database communicate through the internal `fleetcore-net` network, and data persists in the `pgdata` volume.
+- API: `http://localhost:3000/api`
+- Swagger: `http://localhost:3000/docs`
+
+If you changed `PORT` in `.env`, use that port instead (e.g. `PORT=3049` → `http://localhost:3049/docs`). Inside the container the API always listens on `3000`; `docker ps` shows the mapping (`0.0.0.0:3049->3000/tcp`, the first number is the one to use in the browser).
+
+The API and the database communicate through the internal `fleetcore-net` network, and data persists in the `pgdata` volume. After changing the code, rebuild the API image with `docker compose up -d --build api`.
 
 ### Reset the data to the initial seed
 
