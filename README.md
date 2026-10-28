@@ -21,9 +21,7 @@ REST API to manage the lifecycle of preventive and corrective maintenance for th
 
 ## Getting started (step by step)
 
-Follow the steps **in this order**. Option A is the recommended one for a live demo, because the API reloads automatically when the code changes.
-
-### Option A — Local development (recommended)
+Follow the steps **in this order**.
 
 ```bash
 # 1. Clone the repository and install dependencies
@@ -55,21 +53,6 @@ When the terminal shows `Nest application successfully started`, the API is read
 curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"admin@fleetcore.com","password":"Admin12345"}'
 ```
 
-### Option B — Everything in Docker (API + PostgreSQL)
-
-```bash
-cp .env.example .env
-docker compose up -d --build db api
-docker exec fleetcore_api node dist/database/seed.js
-```
-
-- API: `http://localhost:3000/api`
-- Swagger: `http://localhost:3000/docs`
-
-If you changed `PORT` in `.env`, use that port instead (e.g. `PORT=3049` → `http://localhost:3049/docs`). Inside the container the API always listens on `3000`; `docker ps` shows the mapping (`0.0.0.0:3049->3000/tcp`, the first number is the one to use in the browser).
-
-The API and the database communicate through the internal `fleetcore-net` network, and data persists in the `pgdata` volume. After changing the code, rebuild the API image with `docker compose up -d --build api`.
-
 ### Reset the data to the initial seed
 
 Use this before a demo, or if the data was modified by previous tests:
@@ -79,16 +62,14 @@ docker exec prueba_db psql -U postgres -d fleetcore -c "DROP SCHEMA public CASCA
 npm run seed
 ```
 
-With Option B, replace the last line with `docker exec fleetcore_api node dist/database/seed.js`.
-
 ### Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| `EADDRINUSE` / `port is already allocated` on `3000` | Another app uses the port. Change `PORT` in `.env` (e.g. `PORT=3001`) or start with `PORT=3050 npm run start:dev`. Inside the Docker container the API always listens on `3000`; `PORT` only sets the host port. |
+| `EADDRINUSE` / `port is already allocated` on `3000` | Another app uses the port. Change `PORT` in `.env` (e.g. `PORT=3001`) or start with `PORT=3050 npm run start:dev`. |
 | The API returns empty lists / login fails with `401` | The database has no data: run `npm run seed`. |
 | Data disappeared after `docker compose down -v` | `-v` deletes the database volume. Use `docker compose down` or `docker compose stop` to keep the data, then run `npm run seed` again if needed. |
-| Docker API and `npm run start:dev` at the same time | They cannot share a port. Keep Docker on `PORT` and start dev on another one: `PORT=3050 npm run start:dev` (a variable set on the command line takes priority over `.env`). Both use the same database. |
+| `EADDRINUSE` after running `docker compose up -d` (without `db`) | That command also starts the `api` container on the same port. Stop it with `docker compose stop api` and use `npm run start:dev`. |
 
 To check whether a port is free: `ss -ltn | grep :3050` (no output means it is free).
 
