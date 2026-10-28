@@ -23,7 +23,7 @@ export class MaintenanceStatusLog extends AppBaseEntity {
   @Column({ name: 'changed_by_id', type: 'uuid', nullable: true })
   changedById: string | null;
 
-  @ManyToOne('Maintenance', 'statusLogs', { onDelete: 'CASCADE' })
+  @ManyToOne('Maintenance', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'maintenance_id' })
   maintenance: Relation<Maintenance>;
 
