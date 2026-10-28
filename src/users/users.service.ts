@@ -9,8 +9,8 @@ import { User } from './entities/user.entity.js';
 export class UsersService {
   constructor(@InjectRepository(User) private readonly usersRepo: Repository<User>) {}
 
-  // Single place where passwords are hashed (register, admin creation and seed use it)
-  // Único lugar donde se hashean contraseñas (registro, creación por admin y seed lo usan)
+  // Hashes the password with bcrypt before saving (used by public register and admin creation)
+  // Hashea la contraseña con bcrypt antes de guardar (lo usan el registro público y la creación por admin)
   async create(data: { name: string; email: string; password: string; role: Role }) {
     if (await this.findByEmail(data.email)) {
       throw new ConflictException(`El email ${data.email} ya está registrado`);
