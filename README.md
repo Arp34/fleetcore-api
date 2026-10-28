@@ -230,7 +230,7 @@ All routes use the `/api` prefix.
 ```bash
 npm run test          # unit tests with Vitest (Jest-compatible API): status rules and auth
 npm run test:cov      # coverage
-npm run test:e2e      # e2e (requires: docker compose up -d db_test)
+npm run test:e2e      # e2e (starts the test database container automatically)
 ```
 
 - **Postman collection:** [`postman/FleetCore.postman_collection.json`](postman/FleetCore.postman_collection.json), with the main scenarios and automated tests (run it after a fresh seed).
