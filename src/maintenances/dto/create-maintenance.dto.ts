@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsInt, IsNotEmpty, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
+import { IsDate, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { MaintenanceType } from '../enums/maintenance-type.enum.js';
 
 export class CreateMaintenanceDto {
@@ -39,10 +39,13 @@ export class CreateMaintenanceDto {
   @IsDate({ message: 'scheduledAt debe ser una fecha ISO válida' })
   scheduledAt: Date;
 
-  @ApiProperty({ example: 90, description: 'Duración estimada en minutos (define la hora de fin)' })
+  // Optional: if not sent, the service uses 60 minutes to calculate the end time
+  // Opcional: si no se envía, el servicio usa 60 minutos para calcular la hora de fin
+  @ApiPropertyOptional({ example: 90, default: 60, description: 'Duración estimada en minutos (define la hora de fin)' })
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(15)
   @Max(720)
-  durationMinutes: number;
+  durationMinutes?: number;
 }

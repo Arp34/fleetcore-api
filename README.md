@@ -170,7 +170,7 @@ Start from freshly seeded data (see *Reset the data to the initial seed*).
   "status": "COMPLETED",
   "workPerformed": "Cambio de aceite 15W40 y filtros",
   "finalCost": 350000,
-  "finishedAt": "<current date, e.g. 2026-10-28T10:00:00-05:00>",
+  "finishedAt": "2027-01-10T09:00:00-05:00",
   "finalMileage": 60050
 }
 ```
@@ -215,11 +215,11 @@ All routes use the `/api` prefix.
 
 - Maintenances cannot be created for vehicles, mechanics or workshops that don't exist (404) or are inactive (409).
 - A vehicle cannot have more than one active maintenance (`SCHEDULED` or `IN_PROGRESS`).
-- A mechanic cannot have active maintenances with overlapping schedules, in any workshop. Each maintenance has `scheduledAt` and `durationMinutes`; back-to-back slots are allowed (7:30–9:00 and 9:00–10:00).
+- A mechanic cannot have active maintenances with overlapping schedules, in any workshop. Each maintenance has `scheduledAt` and an optional `durationMinutes` (60 by default) that defines its end time; back-to-back slots are allowed (7:30–9:00 and 9:00–10:00).
 - A mechanic can only have one `IN_PROGRESS` maintenance at a time.
 - The maintenance mileage cannot be lower than the vehicle's current mileage.
 - Allowed transitions: `SCHEDULED → IN_PROGRESS | CANCELLED` and `IN_PROGRESS → COMPLETED | CANCELLED`. `COMPLETED` and `CANCELLED` are final states (409).
-- `IN_PROGRESS` sets the vehicle to `IN_MAINTENANCE`. `COMPLETED` requires `workPerformed`, `finalCost`, `finishedAt` and `finalMileage`, sets the vehicle back to `AVAILABLE` and updates its mileage.
+- `IN_PROGRESS` sets the vehicle to `IN_MAINTENANCE`. `COMPLETED` requires `workPerformed`, `finalCost`, `finishedAt` and `finalMileage`, sets the vehicle back to `AVAILABLE` and updates its mileage. `finishedAt` cannot be earlier than the moment the maintenance started.
 - Creation and status changes run inside transactions with row locking (`SELECT ... FOR UPDATE`).
 - Every status change is audited (`maintenance_status_logs`): who changed it, from which status, to which status and when.
 - When a maintenance starts, the vehicle, mechanic and workshop are checked again (they may have been deactivated after scheduling).

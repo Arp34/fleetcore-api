@@ -21,6 +21,7 @@ import { MaintenanceStatus } from './enums/maintenance-status.enum.js';
 import { ACTIVE_STATUSES, assertClosingData, assertValidTransition } from './maintenance-status.rules.js';
 
 const FULL_RELATIONS = { vehicle: true, mechanic: true, workshop: true };
+const DEFAULT_DURATION_MINUTES = 60;
 
 @Injectable()
 export class MaintenancesService {
@@ -63,9 +64,6 @@ export class MaintenancesService {
           `El kilometraje (${dto.mileage}) no puede ser inferior al actual del vehículo (${vehicle.mileage})`,
         );
       }
-      if (dto.scheduledAt.getTime() < Date.now()) {
-        throw new BadRequestException('La fecha programada no puede estar en el pasado');
-      }
 
       const vehicleBusy = await manager.exists(Maintenance, {
         where: { vehicleId: vehicle.id, status: In(ACTIVE_STATUSES) },
@@ -78,8 +76,9 @@ export class MaintenancesService {
       // Strict "<" and ">" allow back-to-back slots (7:30-9:00 and 9:00-10:00 do NOT cross)
       // Regla de cruce: dos rangos se cruzan si inicioExistente < finNuevo Y finExistente > inicioNuevo.
       // Al ser "<" y ">" estrictos se permiten turnos seguidos (7:30-9:00 y 9:00-10:00 NO se cruzan)
+      const durationMinutes = dto.durationMinutes ?? DEFAULT_DURATION_MINUTES;
       const start = dto.scheduledAt;
-      const end = new Date(start.getTime() + dto.durationMinutes * 60_000);
+      const end = new Date(start.getTime() + durationMinutes * 60_000);
       const overlap = await manager.findOne(Maintenance, {
         where: {
           mechanicId: mechanic.id,
@@ -97,7 +96,9 @@ export class MaintenancesService {
 
       // Initial status is always SCHEDULED (column default); the client cannot choose it
       // El estado inicial siempre es SCHEDULED (default de la columna); el cliente no lo elige
-      const maintenance = await manager.save(manager.create(Maintenance, { ...dto, estimatedEndAt: end }));
+      const maintenance = await manager.save(
+        manager.create(Maintenance, { ...dto, durationMinutes, estimatedEndAt: end }),
+      );
       // Audit row saved in the same transaction: if the insert fails, no orphan log remains
       // Fila de auditoría guardada en la misma transacción: si el insert falla, no queda un log huérfano
       await manager.save(MaintenanceStatusLog, {
@@ -154,9 +155,6 @@ export class MaintenancesService {
           throw new BadRequestException(
             `El kilometraje final (${finalMileage}) no puede ser menor al de ingreso (${maintenance.mileage})`,
           );
-        }
-        if (finishedAt.getTime() > Date.now()) {
-          throw new BadRequestException('La fecha de finalización no puede estar en el futuro');
         }
         if (maintenance.startedAt && finishedAt < maintenance.startedAt) {
           throw new BadRequestException('La fecha de finalización no puede ser anterior al inicio');
