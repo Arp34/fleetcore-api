@@ -3,11 +3,14 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
-  DB_HOST: z.string(),
-  DB_PORT: z.coerce.number(),
-  DB_USERNAME: z.string(),
-  DB_PASSWORD: z.string(),
-  DB_NAME: z.string(),
+  // Full connection string (Neon, Render...). If present, it wins over the DB_* variables
+  // Cadena de conexión completa (Neon, Render...). Si existe, tiene prioridad sobre las DB_*
+  DATABASE_URL: z.string().url().optional(),
+  DB_HOST: z.string().optional(),
+  DB_PORT: z.coerce.number().optional(),
+  DB_USERNAME: z.string().optional(),
+  DB_PASSWORD: z.string().optional(),
+  DB_NAME: z.string().optional(),
   DB_SYNC: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   JWT_SECRET: z.string().min(16),
   // Accepts "3600" (seconds) or "1h", "30m", "7d"
@@ -19,6 +22,8 @@ export const envSchema = z.object({
     .string()
     .transform((v) => v.split(',').map((key) => key.trim()).filter(Boolean))
     .pipe(z.array(z.string()).min(1)),
+}).refine((env) => env.DATABASE_URL || env.DB_HOST, {
+  message: 'Define DATABASE_URL or the DB_* variables (Define DATABASE_URL o las variables DB_*)',
 });
 
 export type Env = z.infer<typeof envSchema>;

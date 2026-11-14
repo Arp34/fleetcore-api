@@ -27,11 +27,17 @@ import { IntegrationsModule } from './integrations/integrations.module.js';
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) => ({
         type: 'postgres',
-        host: config.get('DB_HOST', { infer: true }),
-        port: config.get('DB_PORT', { infer: true }),
-        username: config.get('DB_USERNAME', { infer: true }),
-        password: config.get('DB_PASSWORD', { infer: true }),
-        database: config.get('DB_NAME', { infer: true }),
+        // Cloud (Neon): one URL + SSL. Local Docker: separate DB_* variables, no SSL
+        // Nube (Neon): una URL + SSL. Docker local: variables DB_* separadas, sin SSL
+        ...(config.get('DATABASE_URL', { infer: true })
+          ? { url: config.get('DATABASE_URL', { infer: true }), ssl: true }
+          : {
+              host: config.get('DB_HOST', { infer: true }),
+              port: config.get('DB_PORT', { infer: true }),
+              username: config.get('DB_USERNAME', { infer: true }),
+              password: config.get('DB_PASSWORD', { infer: true }),
+              database: config.get('DB_NAME', { infer: true }),
+            }),
         autoLoadEntities: true,
         synchronize: config.get('DB_SYNC', { infer: true }),
         dropSchema: config.get('NODE_ENV', { infer: true }) === 'test',

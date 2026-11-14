@@ -1,0 +1,23 @@
+# Render Blueprint: Render reads this file and creates the service on its own
+# Blueprint de Render: Render lee este archivo y crea el servicio solo
+services:
+  - type: web
+    name: fleetcore-api
+    runtime: docker # builds with the repo's Dockerfile (construye con el Dockerfile del repo)
+    plan: free
+    region: virginia # same area as the Neon database (misma zona que la base de datos de Neon)
+    branch: main
+    healthCheckPath: /docs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # secret: Render asks for it when creating the service (secreto: Render lo pide al crear el servicio)
+      - key: JWT_SECRET
+        generateValue: true # Render generates a random secret (Render genera un secreto aleatorio)
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: API_KEYS
+        generateValue: true
+      - key: DB_SYNC
+        value: "false" # tables are created by the seed, not on every start (las tablas las crea el seed, no cada arranque)
